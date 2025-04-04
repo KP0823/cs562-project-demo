@@ -1,5 +1,47 @@
 import subprocess
 
+class mf_Query:
+    def __init__(self):
+        self.s=[]
+        self.n=0
+        self.V= []
+        self.F=[]
+        self.sigma=[]
+        self.G=None
+    mf_Query=mf_Query()
+
+def readQuery_CommandLine():
+    s= input("SELECT ATTRIBUTE(S):"). strip().lower().split(",")
+    n= int(input("NUMBER OF GROUPING VARIABLES(n):").strip()) # this strip might be unnecessary
+    V= input("GROUPING ATTRIBUTES(V):").strip().lower().split(",")
+    F= input("F-VECT([F])").strip().lower().split(",")
+    print("SELECT CONDITION-VECT:")
+    counter =1;
+    sigma=[]
+    while True:
+        temp= input(f"{counter}.").strip().lower()
+        if temp == "":
+            break
+        sigma.append(temp)
+    G=input("HAVING_CONDITION(G):").strip().lower()
+
+    return s, n, V, F, sigma, G
+
+def readQuery_File(filename):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+        s = lines[1].strip().lower().split(",")
+        n = int(lines[3].strip())
+        V = lines[5].strip().lower().split(",")
+        F = lines[7].strip().lower().split(",")
+        sigma = []
+        for line in lines[9:]:
+            if line[0].isdigit():
+                sigma.append(line.strip().lower())
+            else:
+                break        
+        G = lines[-1].strip().lower()
+    return s, n, V, F, sigma, G
 
 def main():
     """
@@ -49,7 +91,7 @@ def main():
 if "__main__" == __name__:
     main()
     """
-
+    readQuery_File("q1.txt");
     # Write the generated code to a file
     open("_generated.py", "w").write(tmp)
     # Execute the generated code

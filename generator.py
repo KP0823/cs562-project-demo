@@ -1,4 +1,6 @@
 import subprocess
+import sys
+import os
 
 class mf_Query:
     def __init__(self):
@@ -20,16 +22,21 @@ def readQuery_CommandLine():
     counter = 1
     sigma=[]
     while True:
-        temp= input(f"{counter}.").strip().lower()
+        temp= input(f"{counter}.").strip()
         if temp == "":
             break
         sigma.append(temp)
+        counter += 1
     G=input("HAVING_CONDITION(G):").strip().lower()
 
     return s, n, V, F, sigma, G
 
 def readQuery_File(filename):
-    with open(filename, 'r') as file:
+    #get working directory
+    current_dir = os.getcwd()
+    queryFolder = os.path.join(current_dir, 'queries')
+    filepath = os.path.join(queryFolder, filename)
+    with open(filepath, 'r') as file:
         lines = file.readlines()
         s = lines[1].strip().lower().split(",")
         n = int(lines[3].strip())
@@ -45,9 +52,14 @@ def readQuery_File(filename):
     return s, n, V, F, sigma, G
 
 def main():
-
-    s, n, V, F, sigma, G = readQuery_File('q1.txt')
-    print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
+    #check if there is a file input
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+        s, n, V, F, sigma, G = readQuery_File(filename)
+        print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
+    else:
+        s, n, V, F, sigma, G = readQuery_CommandLine()
+        print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
 
     """
     This is the generator code. It should take in the MF structure and generate the code
@@ -55,10 +67,17 @@ def main():
     file (e.g. _generated.py) and then run.
     """
 
-    body = """
-    for row in cur:
-        if row['quant'] > 10:
-            _global.append(row)
+    body = f"""
+    #for generating the mf structure
+    class mf_Query:
+        def __init__(self, {V}, {F}):
+            for elem in V: 
+                setattr(self, elem, elem)
+            for elem in F:
+                setattr(self, elem, elem)
+    
+    mf_struct = [mf_Query(V, F) for _ in range(10000)]
+
     """
 
     # Note: The f allows formatting with variables.

@@ -8,7 +8,8 @@ class mf_Query:
         self.F=[]
         self.sigma=[]
         self.G=None
-    mf_Query=mf_Query()
+
+mf_Query=mf_Query()
 
 def readQuery_CommandLine():
     s= input("SELECT ATTRIBUTE(S):"). strip().lower().split(",")
@@ -16,7 +17,7 @@ def readQuery_CommandLine():
     V= input("GROUPING ATTRIBUTES(V):").strip().lower().split(",")
     F= input("F-VECT([F])").strip().lower().split(",")
     print("SELECT CONDITION-VECT:")
-    counter =1;
+    counter = 1
     sigma=[]
     while True:
         temp= input(f"{counter}.").strip().lower()
@@ -37,13 +38,17 @@ def readQuery_File(filename):
         sigma = []
         for line in lines[9:]:
             if line[0].isdigit():
-                sigma.append(line.strip().lower())
+                sigma.append(line.strip())
             else:
                 break        
         G = lines[-1].strip().lower()
     return s, n, V, F, sigma, G
 
 def main():
+
+    s, n, V, F, sigma, G = readQuery_File('q1.txt')
+    print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
+
     """
     This is the generator code. It should take in the MF structure and generate the code
     needed to run the query. That generated code should be saved to a 

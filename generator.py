@@ -50,8 +50,11 @@ def readQuery_File(filename):
         #         sigma.append(line.strip())
         #     else:
         #         break
-        # I am not that sure if this is the correct way to do this but oh well        
-        G = lines[-1].strip().lower()
+        # I am not that sure if this is the correct way to do this but oh well
+        if(len(lines)>11):
+            G = lines[-1].strip().lower()
+        else:
+            G = None
     return s, n, V, F, sigma, G
 
 def main():

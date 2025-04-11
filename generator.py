@@ -18,15 +18,16 @@ def readQuery_CommandLine():
     n= int(input("NUMBER OF GROUPING VARIABLES(n):").strip()) # this strip might be unnecessary
     V= input("GROUPING ATTRIBUTES(V):").strip().lower().split(",")
     F= input("F-VECT([F])").strip().lower().split(",")
-    print("SELECT CONDITION-VECT:")
-    counter = 1
-    sigma=[]
-    while True:
-        temp= input(f"{counter}.").strip()
-        if temp == "":
-            break
-        sigma.append(temp)
-        counter += 1
+    #print("SELECT CONDITION-VECT:")
+    sigma = input("SELECT CONDITION-VECT:").strip().lower().split(",") 
+    # counter = 1
+    # sigma=[]
+    # while True:
+    #     temp= input(f"{counter}.").strip()
+    #     if temp == "":
+    #         break
+    #     sigma.append(temp)
+    #     counter += 1
     G=input("HAVING_CONDITION(G):").strip().lower()
 
     return s, n, V, F, sigma, G
@@ -42,12 +43,14 @@ def readQuery_File(filename):
         n = int(lines[3].strip())
         V = lines[5].strip().lower().split(",")
         F = lines[7].strip().lower().split(",")
-        sigma = []
-        for line in lines[9:]:
-            if line[0].isdigit():
-                sigma.append(line.strip())
-            else:
-                break        
+        sigma= lines[9].strip().lower().split(",")
+        # sigma = []
+        # for line in lines[9:]:
+        #     if line[0].isdigit():
+        #         sigma.append(line.strip())
+        #     else:
+        #         break
+        # I am not that sure if this is the correct way to do this but oh well        
         G = lines[-1].strip().lower()
     return s, n, V, F, sigma, G
 

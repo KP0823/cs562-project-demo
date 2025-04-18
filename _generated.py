@@ -21,10 +21,52 @@ def query():
     
     _global = []
     
-    for row in cur:
-        if row['quant'] > 10:
-            _global.append(row)
+    mf_struct = {}
+    rows = cur.fetchall()
+
+    #pass 0
+    for row in rows:
+        key = tuple([row['cust']])
+        if key not in mf_struct:
+            mf_struct[key] = {
+            'cust': row['cust'],
+            'avg_3_quant_count': 0,
+            '2_sum_quant': 0, '3_sum_quant': 0, '3_avg_quant': 0, '1_sum_quant': 0
+        }
+
+    #Passes to n
     
+    #Pass 1: Sigma is (state=='NY')
+    for row in rows:
+        if row["state"]=='NY':
+            key = tuple([row["cust"]])
+            mf_struct[key]['1_sum_quant'] += row['quant']
+
+    #Pass 2: Sigma is (state=='NJ')
+    for row in rows:
+        if row["state"]=='NJ':
+            key = tuple([row["cust"]])
+            mf_struct[key]['2_sum_quant'] += row['quant']
+
+    #Pass 3: Sigma is (state=='CT')
+    for row in rows:
+        if row["state"]=='CT':
+            key = tuple([row["cust"]])
+            mf_struct[key]['3_sum_quant'] += row['quant']
+            mf_struct[key]['3_avg_quant'] += row['quant']
+            mf_struct[key]['avg_3_quant_count'] += 1
+
+#Compute Averages 
+
+    for key in mf_struct:
+        if mf_struct[key]['avg_3_quant_count'] > 0:
+            mf_struct[key]['3_avg_quant'] /= mf_struct[key]['avg_3_quant_count']
+
+    _global = []
+    for row in mf_struct.values():
+        if row["1_sum_quant"] > 2 * row["2_sum_quant"] or row["1_avg_quant"] > row["3_avg_quant"]:
+            _global.append({key: row[key] for key in {'cust', '3_sum_quant', '1_sum_quant', '2_sum_quant'}})
+        
     
     return tabulate.tabulate(_global,
                         headers="keys", tablefmt="psql")

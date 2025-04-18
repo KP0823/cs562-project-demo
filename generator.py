@@ -54,20 +54,49 @@ def adjusted_condtion(cond):
       result.append(item.lower())
     else:
       temp=re.split(r'\s*(==|<|>|!=|<=|>=)\s*',item)
-      temp[0]= f'row[{temp[0]}]'
+      temp[0]= f'row["{temp[0]}"]'
       result.append("".join(temp));
   return " ".join(result)
+
+import re
+
+def wrap_tokens_with_row(expr):
+    # Set of keywords/logical operators we don't want to wrap
+    exclude_keywords = {'or', 'and', 'not', 'in', 'is', 'if', 'else', 'elif', 'True', 'False', 'None'}
+
+    # Protect string literals
+    string_literals = re.findall(r"'[^']*'", expr)
+    placeholders = [f"__str_{i}__" for i in range(len(string_literals))]
+    for lit, ph in zip(string_literals, placeholders):
+        expr = expr.replace(lit, ph)
+
+    # Replace variable-like tokens
+    def replacer(match):
+        token = match.group(0)
+        if token.isdigit() or token in exclude_keywords:
+            return token
+        return f'row["{token}"]'
+
+    # Match: any word-like token that starts with a letter or _, or digit followed by _
+    expr = re.sub(r'\b[a-zA-Z_]\w*|\b\d+_\w*', replacer, expr)
+
+    # Restore string literals
+    for ph, lit in zip(placeholders, string_literals):
+        expr = expr.replace(ph, lit)
+
+    return expr
+
    
 
 def main():
     #check if there is a file input
-    if len(sys.argv) > 1:
-        filename = sys.argv[1]
-        s, n, V, F, sigma, G = readQuery_File(filename)
-        print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
-    else:
-        s, n, V, F, sigma, G = readQuery_CommandLine()
-        print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
+    # if len(sys.argv) > 1:
+    #     filename = sys.argv[1]
+    #     s, n, V, F, sigma, G = readQuery_File(filename)
+    #     print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
+    # else:
+    #     s, n, V, F, sigma, G = readQuery_CommandLine()
+    #     print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
 
     """
     This is the generator code. It should take in the MF structure and generate the code
@@ -79,7 +108,7 @@ def main():
     V = {"cust"}
     n = 3
     S = {"cust", "1_sum_quant", "2_sum_quant", "3_sum_quant"}
-    sigma = ["state==NY", "state==NJ", "state==CT"]
+    sigma = ["state=='NY'", "state=='NJ'", "state=='CT'"]
     G = '1_sum_quant > 2 * 2_sum_quant or 1_avg_quant > 3_avg_quant'
 
     aggregates = defaultdict(lambda: defaultdict(set))
@@ -141,7 +170,7 @@ def main():
     body += f"""
     _global = []
     for row in mf_struct.values():
-        if {G}:
+        if {wrap_tokens_with_row(G)}:
             _global.append({{key: row[key] for key in {S}}})
         """
 
@@ -180,7 +209,7 @@ def main():
 if "__main__" == __name__:
     main()
     """
-    readQuery_File("q1.txt");
+    # readQuery_File("q1.txt")
     # Write the generated code to a file
     open("_generated.py", "w").write(tmp)
     # Execute the generated code

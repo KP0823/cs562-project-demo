@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import re
 from collections import defaultdict
 
 class mf_Query:
@@ -44,7 +45,19 @@ def readQuery_File(filename):
         G = lines[-1].strip().lower()
     return s, n, V, F, sigma, G
 
-    
+def adjusted_condtion(cond):
+  splitString= re.split(r'\s*(or|and)\s*',cond)
+  stripped_list= [item.strip() for item in splitString]
+  result= []
+  for item in stripped_list:
+    if item.lower()=='or' or item.lower()=='and':
+      result.append(item.lower())
+    else:
+      temp=re.split(r'\s*(==|<|>|!=|<=|>=)\s*',item)
+      temp[0]= f'row[{temp[0]}]'
+      result.append("".join(temp));
+  return " ".join(result)
+   
 
 def main():
     #check if there is a file input
@@ -98,7 +111,7 @@ def main():
         sigs = sigma[i-1]
         body += f"\n    #Pass {i}: Sigma is ({sigs})\n"
         body += "    for row in rows:\n"
-        body += f"        if {sigs}:\n"
+        body += f"        if {adjusted_condtion(sigs)}:\n"
         body += f"            key = tuple([{', '.join(f'row[\"{v}\"]' for v in V)}])\n"
 
         for func in aggregates[i]:

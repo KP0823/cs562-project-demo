@@ -104,7 +104,7 @@ def main():
     file (e.g. _generated.py) and then run.
     """
 
-    F = {"1_sum_quant", "2_sum_quant", "3_sum_quant", "3_avg_quant"}
+    F = {"1_sum_quant", "1_avg_quant", "2_sum_quant", "3_sum_quant", "3_avg_quant"}
     V = {"cust"}
     n = 3
     S = {"cust", "1_sum_quant", "2_sum_quant", "3_sum_quant"}

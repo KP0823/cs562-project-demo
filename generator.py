@@ -13,17 +13,14 @@ class mf_Query:
         self.G=None
 
 def readQuery_CommandLine():
-    s= input("SELECT ATTRIBUTE(S):"). strip().lower().split(",")
+    s= set([item.strip().lower() for item in input("SELECT ATTRIBUTE(S):").split(",")])
     n= int(input("NUMBER OF GROUPING VARIABLES(n):").strip()) # this strip might be unnecessary
-    V= input("GROUPING ATTRIBUTES(V):").strip().lower().split(",")
-    F= input("F-VECT([F])").strip().lower().split(",")
-    print("SELECT CONDITION-VECT:")
-    counter =1
+    V= set([item.strip().lower() for item in input("GROUPING ATTRIBUTES(V):").split(",")])
+    F= set([item.strip().lower() for item in input("F-VECT([F]):").split(",")])
+    print("SELECT CONDITION-VECT(write True if the GV has no conditions):")
     sigma=[]
-    while True:
-        temp= input(f"{counter}.").strip().lower()
-        if temp == "":
-            break
+    for i in range (n):
+        temp= input(f"{i+1}.").strip()
         sigma.append(temp)
     G=input("HAVING_CONDITION(G):").strip().lower()
 
@@ -32,10 +29,10 @@ def readQuery_CommandLine():
 def readQuery_File(filename):
     with open(filename, 'r') as file:
         lines = file.readlines()
-        s = lines[1].strip().lower().split(",")
+        s = [item.strip().lower() for item in lines[1].split(",")]
         n = int(lines[3].strip())
-        V = lines[5].strip().lower().split(",")
-        F = lines[7].strip().lower().split(",")
+        V = set([item.strip().lower() for item in lines[5].split(",")])
+        F = set([item.strip().lower() for item in lines[7].split(",")])
         sigma = []
         for line in lines[9:]:
             if line[0].isdigit():
@@ -54,8 +51,10 @@ def adjusted_condtion(cond):
       result.append(item.lower())
     else:
       temp=re.split(r'\s*(==|<|>|!=|<=|>=)\s*',item)
+      if temp[0] == 'True':
+          return True
       temp[0]= f'row["{temp[0]}"]'
-      result.append("".join(temp));
+      result.append("".join(temp))
   return " ".join(result)
 
 import re
@@ -90,13 +89,14 @@ def wrap_tokens_with_row(expr):
 
 def main():
     #check if there is a file input
-    # if len(sys.argv) > 1:
-    #     filename = sys.argv[1]
-    #     s, n, V, F, sigma, G = readQuery_File(filename)
-    #     print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
-    # else:
-    #     s, n, V, F, sigma, G = readQuery_CommandLine()
-    #     print(f"{s}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+        S, n, V, F, sigma, G = readQuery_File(filename)
+        #change S V and F to "sets?"
+        print(f"{F}\n {V}\n {n}\n {S}\n {sigma}\n {G}")
+    else:
+        S, n, V, F, sigma, G = readQuery_CommandLine()
+        print(f"{F}\n {V}\n {n}\n {S}\n {sigma}\n {G}")
 
     """
     This is the generator code. It should take in the MF structure and generate the code
@@ -104,12 +104,12 @@ def main():
     file (e.g. _generated.py) and then run.
     """
 
-    F = {"1_sum_quant", "1_avg_quant", "2_sum_quant", "3_sum_quant", "3_avg_quant"}
-    V = {"cust"}
-    n = 3
-    S = {"cust", "1_sum_quant", "2_sum_quant", "3_sum_quant"}
-    sigma = ["state=='NY'", "state=='NJ'", "state=='CT'"]
-    G = '1_sum_quant > 2 * 2_sum_quant or 1_avg_quant > 3_avg_quant'
+    # F = {"1_sum_quant", "1_avg_quant", "2_sum_quant", "3_sum_quant", "3_avg_quant"}
+    # V = {"cust"}
+    # n = 3
+    # S = ["cust", "1_sum_quant", "2_sum_quant", "3_sum_quant"]
+    # sigma = ["state=='NY'", "state=='NJ'", "state=='CT'"]
+    # G = '1_sum_quant > 2 * 2_sum_quant or 1_avg_quant > 3_avg_quant'
 
     aggregates = defaultdict(lambda: defaultdict(set))
     for elem in F:
@@ -171,7 +171,13 @@ def main():
     _global = []
     for row in mf_struct.values():
         if {wrap_tokens_with_row(G)}:
-            _global.append({{key: row[key] for key in {S}}})
+            output = {{}}
+            for col in {S}:
+                if col in row:
+                    output[col] = row[col]
+                else:
+                    output[col] = eval(col, None, row)
+            _global.append(output)
         """
 
     # Note: The f allows formatting with variables.
@@ -209,12 +215,12 @@ def main():
 if "__main__" == __name__:
     main()
     """
-    print(readQuery_File(".\queries\q1.txt"))
+    #print(readQuery_File(".\queries\q1.txt"))
 
     # Write the generated code to a file
-    #open("_generated.py", "w").write(tmp)
+    open("_generated.py", "w").write(tmp)
     # Execute the generated code
-    #subprocess.run(["python", "_generated.py"])
+    subprocess.run(["python", "_generated.py"])
 
 
 if "__main__" == __name__:

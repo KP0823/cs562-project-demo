@@ -166,18 +166,22 @@ def main():
         if mf_struct[key]['avg_{i}_{attribute}_count'] > 0:
             mf_struct[key]['{i}_avg_{attribute}'] /= mf_struct[key]['avg_{i}_{attribute}_count']
 """
-        
+    processed_S_assignments = []
+    for col in S:
+        processed_expr = wrap_tokens_with_row(col)
+        processed_S_assignments.append(f"    output[{repr(col)}] = eval({repr(processed_expr)})")
     body += f"""
     _global = []
     for row in mf_struct.values():
         if {wrap_tokens_with_row(G)}:
             output = {{}}
-            for col in {S}:
-                if col in row:
-                    output[col] = row[col]
-                else:
-                    output[col] = eval(col, None, row)
-            _global.append(output)
+           {'\n'.join(processed_S_assignments)}
+            # for col in {S}:
+            #     if col in row:
+            #         output[col] = row[col]
+            #     else:
+            #         output[col] = eval(col, None, row)
+             _global.append(output)
         """
 
     # Note: The f allows formatting with variables.

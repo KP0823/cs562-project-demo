@@ -63,6 +63,10 @@ def wrap_tokens_with_row(expr):
     # Set of keywords/logical operators we don't want to wrap
     exclude_keywords = {'or', 'and', 'not', 'in', 'is', 'if', 'else', 'elif', 'True', 'False', 'None'}
 
+    #Checking if expr is true
+    if (expr) == 'true':
+        return True
+
     # Protect string literals
     string_literals = re.findall(r"'[^']*'", expr)
     placeholders = [f"__str_{i}__" for i in range(len(string_literals))]
@@ -124,15 +128,27 @@ def main():
     rows = cur.fetchall()
 
     #pass 0
+    """
+    avg_line = ', '.join(
+        f"'avg_{i}_{attribute}_count': 0"
+        for i in aggregates for func in aggregates[i]
+        if func == 'avg'
+        for attribute in aggregates[i][func]
+    )
+    body += f"""
     for row in rows:
         key = tuple([{', '.join(f"row['{v}']" for v in V)}])
         if key not in mf_struct:
             mf_struct[key] = {{
             {keys},
-            {', '.join(f"'avg_{i}_{attribute}_count': 0" for i in aggregates for func in aggregates[i] if func == 'avg' for attribute in aggregates[i][func])},
+    """
+    if avg_line:
+            body += f"""        {avg_line},"""
+    body += f"""
             {', '.join(f"'{i}_{func}_{attribute}': 0" for i in aggregates for func in aggregates[i] for attribute in aggregates[i][func])}
         }}
-
+        """
+    """
     #Passes to n
     """
 
@@ -156,7 +172,7 @@ def main():
                     body += f"            mf_struct[key]['{i}_max_{attribute}'] = max(mf_struct[key]['{i}_max_{attribute}'], row['{attribute}'])\n"
                 elif func == "min":
                     body += f"            if mf_struct[key]['{i}_min_{attribute}'] == 0 or row['{attribute}'] < mf_struct[key]['{i}_min_{attribute}']:\n"
-                    body += f"                mf_struct[key]['{i}_min_{attribute}'] = row[{attribute}]\n"
+                    body += f"                mf_struct[key]['{i}_min_{attribute}'] = row['{attribute}']\n"
         
     body += "\n#Compute Averages \n"
     for i in aggregates:
@@ -166,22 +182,19 @@ def main():
         if mf_struct[key]['avg_{i}_{attribute}_count'] > 0:
             mf_struct[key]['{i}_avg_{attribute}'] /= mf_struct[key]['avg_{i}_{attribute}_count']
 """
-    processed_S_assignments = []
-    for col in S:
-        processed_expr = wrap_tokens_with_row(col)
-        processed_S_assignments.append(f"    output[{repr(col)}] = eval({repr(processed_expr)})")
+        
     body += f"""
     _global = []
     for row in mf_struct.values():
+        print(row)
         if {wrap_tokens_with_row(G)}:
             output = {{}}
-           {'\n'.join(processed_S_assignments)}
-            # for col in {S}:
-            #     if col in row:
-            #         output[col] = row[col]
-            #     else:
-            #         output[col] = eval(col, None, row)
-             _global.append(output)
+            for col in {S}:
+                if col in row:
+                    output[col] = row[col]
+                else:
+                    output[col] = eval(col, None, {{"row": row}})
+            _global.append(output)
         """
 
     # Note: The f allows formatting with variables.

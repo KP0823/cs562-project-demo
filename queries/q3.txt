@@ -1,0 +1,12 @@
+SELECT ATTRIBUTE(S):
+cust, quant, prod, date, state, 1_min_quant, 1_max_quant
+NUMBER OF GROUPING VARIABLES(n):
+1
+GROUPING ATTRIBUTES(V):
+cust, quant, prod, date, state
+F-VECT([F]):
+1_min_quant, 1_max_quant 
+SELECT CONDITION-VECT([σ]):
+1.True
+HAVING_CONDITION(G):
+quant == 1_min_quant or quant == 1_max_quant

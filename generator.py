@@ -39,7 +39,7 @@ def readQuery_File(filename):
         sigma = []
         for line in lines[9:]:
             if line[0].isdigit():
-                sigma.append(line.strip().lower())
+                sigma.append(re.sub(r'^\d+\.', '',(line.strip())))
             else:
                 break        
         G = lines[-1].strip().lower()
@@ -209,11 +209,12 @@ def main():
 if "__main__" == __name__:
     main()
     """
-    # readQuery_File("q1.txt")
+    print(readQuery_File(".\queries\q1.txt"))
+
     # Write the generated code to a file
-    open("_generated.py", "w").write(tmp)
+    #open("_generated.py", "w").write(tmp)
     # Execute the generated code
-    subprocess.run(["python", "_generated.py"])
+    #subprocess.run(["python", "_generated.py"])
 
 
 if "__main__" == __name__:

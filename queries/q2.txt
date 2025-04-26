@@ -1,5 +1,5 @@
 SELECT ATTRIBUTE(S):
-prod, month,  1_sum_quant, 2_sum_quant, 1_sum_quant + 2_sum_quant, 1_sum_quant / 2_sum_quant
+prod, month,  1_sum_quant, 2_sum_quant, 1_sum_quant + 2_sum_quant, (1_sum_quant + 2_sum_quant) / 2_sum_quant
 NUMBER OF GROUPING VARIABLES(n):
 2
 GROUPING ATTRIBUTES(V):

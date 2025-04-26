@@ -35,40 +35,60 @@ def query():
             else:
                 outputArr.append(token)
         return ' '.join(outputArr)
+
     mf_struct = {}
     rows = cur.fetchall()
 
     #pass 0
     
     for row in rows:
-        key = tuple([row['month'], row['prod']])
+        key = tuple([row['cust']])
         if key not in mf_struct:
             mf_struct[key] = {
-            'month': row['month'], 'prod': row['prod'],
-    
-            '2_sum_quant': 0, '1_sum_quant': 0
+            'cust': row['cust'],
+            'avg_1_quant_count': 0, 'avg_3_quant_count': 0,
+            '1_avg_quant': 0, '1_sum_quant': 0, '3_sum_quant': 0, '3_avg_quant': 0, '2_sum_quant': 0
         }
         
-    #Pass 1: Sigma is (True)
+    #Pass 1: Sigma is (state=="NY")
     for row in rows:
-        if True:
-            key = tuple([row["month"], row["prod"]])
+        if row["state"]=="NY":
+            key = tuple([row["cust"]])
+            mf_struct[key]['1_avg_quant'] += row['quant']
+            mf_struct[key]['avg_1_quant_count'] += 1
             mf_struct[key]['1_sum_quant'] += row['quant']
 
-    #Pass 2: Sigma is (year==2020)
+    #Pass 2: Sigma is (state=="NJ")
     for row in rows:
-        if row["year"]==2020:
-            key = tuple([row["month"], row["prod"]])
+        if row["state"]=="NJ":
+            key = tuple([row["cust"]])
             mf_struct[key]['2_sum_quant'] += row['quant']
+
+    #Pass 3: Sigma is (state=="CT")
+    for row in rows:
+        if row["state"]=="CT":
+            key = tuple([row["cust"]])
+            mf_struct[key]['3_sum_quant'] += row['quant']
+            mf_struct[key]['3_avg_quant'] += row['quant']
+            mf_struct[key]['avg_3_quant_count'] += 1
 
 #Compute Averages 
 
+    for key in mf_struct:
+        if mf_struct[key]['avg_1_quant_count'] > 0:
+            mf_struct[key]['1_avg_quant'] /= mf_struct[key]['avg_1_quant_count']
+
+    for key in mf_struct:
+        if mf_struct[key]['avg_3_quant_count'] > 0:
+            mf_struct[key]['3_avg_quant'] /= mf_struct[key]['avg_3_quant_count']
+
+    #Apply Having Condition and form output table 
+    
     _global = []
     for row in mf_struct.values():
-        print(row)
-        if row["2_sum_quant"] > 10000 and row["1_sum_quant"] > 40000:
+        if row["1_sum_quant"] > 2 * row["2_sum_quant"] or row["1_avg_quant"] > row["3_avg_quant"]:
             output = {}
-            for col in ['prod', 'month', '1_sum_quant', '2_sum_quant', '1_sum_quant + 2_sum_quant', '1_sum_quant / 2_sum_quant']:
+            for col in ['cust', '1_sum_quant', '2_sum_quant', '3_sum_quant']:
                 if col in row:
                     output[col] = row[col]
                 else:

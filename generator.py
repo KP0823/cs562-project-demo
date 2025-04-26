@@ -138,6 +138,7 @@ def main():
             else:
                 outputArr.append(token)
         return ' '.join(outputArr)
+
     mf_struct = {{}}
     rows = cur.fetchall()
 
@@ -198,9 +199,10 @@ def main():
 """
         
     body += f"""
+    #Apply Having Condition and form output table 
+    
     _global = []
     for row in mf_struct.values():
-        print(row)
         if {wrap_tokens_with_row(G)}:
             output = {{}}
             for col in {S}:

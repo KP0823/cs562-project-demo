@@ -124,6 +124,20 @@ def main():
     keys = ', '.join(f"'{v}': row['{v}']" for v in V)
 
     body = f"""
+    import re
+    #function needed to wrap aggregate equations
+    def simplify_aggr(str):
+        tokens = re.split(r'(\W)', str)
+        outputArr = []
+        for token in tokens:
+            token = token.strip()
+            if not token:
+                continue
+            if re.match(r'^\d+_(sum|avg|max|min|count)_\w+$', token):
+                outputArr.append(f"row['{{token}}']")
+            else:
+                outputArr.append(token)
+        return ' '.join(outputArr)
     mf_struct = {{}}
     rows = cur.fetchall()
 
@@ -193,7 +207,7 @@ def main():
                 if col in row:
                     output[col] = row[col]
                 else:
-                    output[col] = eval(col, None, {{"row": row}})
+                    output[col] = eval(simplify_aggr(col), None, {{"row": row}})
             _global.append(output)
         """
 

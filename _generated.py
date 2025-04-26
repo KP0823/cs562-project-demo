@@ -21,40 +21,58 @@ def query():
     
     _global = []
     
+    import re
+    #function needed to wrap aggregate equations
+    def simplify_aggr(str):
+        tokens = re.split(r'(\W)', str)
+        outputArr = []
+        for token in tokens:
+            token = token.strip()
+            if not token:
+                continue
+            if re.match(r'^\d+_(sum|avg|max|min|count)_\w+$', token):
+                outputArr.append(f"row['{token}']")
+            else:
+                outputArr.append(token)
+        return ' '.join(outputArr)
     mf_struct = {}
     rows = cur.fetchall()
 
     #pass 0
     
     for row in rows:
-        key = tuple([row['state'], row['date'], row['prod'], row['quant'], row['cust']])
+        key = tuple([row['month'], row['prod']])
         if key not in mf_struct:
             mf_struct[key] = {
-            'state': row['state'], 'date': row['date'], 'prod': row['prod'], 'quant': row['quant'], 'cust': row['cust'],
+            'month': row['month'], 'prod': row['prod'],
     
-            '1_min_quant': 0, '1_max_quant': 0
+            '2_sum_quant': 0, '1_sum_quant': 0
         }
         
     #Pass 1: Sigma is (True)
     for row in rows:
         if True:
-            key = tuple([row["state"], row["date"], row["prod"], row["quant"], row["cust"]])
-            if mf_struct[key]['1_min_quant'] == 0 or row['quant'] < mf_struct[key]['1_min_quant']:
-                mf_struct[key]['1_min_quant'] = row['quant']
-            mf_struct[key]['1_max_quant'] = max(mf_struct[key]['1_max_quant'], row['quant'])
+            key = tuple([row["month"], row["prod"]])
+            mf_struct[key]['1_sum_quant'] += row['quant']
+
+    #Pass 2: Sigma is (year==2020)
+    for row in rows:
+        if row["year"]==2020:
+            key = tuple([row["month"], row["prod"]])
+            mf_struct[key]['2_sum_quant'] += row['quant']
 
 #Compute Averages 
 
     _global = []
     for row in mf_struct.values():
         print(row)
-        if row["quant"] == row["1_min_quant"] or row["quant"] == row["1_max_quant"]:
+        if row["2_sum_quant"] > 10000 and row["1_sum_quant"] > 40000:
             output = {}
-            for col in ['cust', 'quant', 'prod', 'date', 'state', '1_min_quant', '1_max_quant']:
+            for col in ['prod', 'month', '1_sum_quant', '2_sum_quant', '1_sum_quant + 2_sum_quant', '1_sum_quant / 2_sum_quant']:
                 if col in row:
                     output[col] = row[col]
                 else:
-                    output[col] = eval(col, None, {"row": row})
+                    output[col] = eval(simplify_aggr(col), None, {"row": row})
             _global.append(output)
         
     

@@ -1,14 +1,14 @@
 SELECT ATTRIBUTE(S):
-cust, prod, year 1_avg_quant, 2_avg_quant, 3_avg_quant
+cust, prod, 1_avg_quant, 2_avg_quant, 3_avg_quant
 NUMBER OF GROUPING VARIABLES(n):
-5
+3
 GROUPING ATTRIBUTES(V):
-cust, prod, year
+cust, prod
 F-VECT([F]):
 1_avg_quant, 2_avg_quant, 3_avg_quant
 SELECT CONDITION-VECT([σ]):
-1.year = 2018
-2.year = 2019
-3.year = 2020
+1.year == 2018
+2.year == 2019
+3.year == 2020
 HAVING_CONDITION(G):
 3_avg_quant >= 2_avg_quant and 2_avg_quant >= 1_avg_quant

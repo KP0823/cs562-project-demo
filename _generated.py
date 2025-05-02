@@ -42,53 +42,56 @@ def query():
     #pass 0
     
     for row in rows:
-        key = tuple([row['cust']])
+        key = tuple([row['cust'], row['prod']])
         if key not in mf_struct:
             mf_struct[key] = {
-            'cust': row['cust'],
-            'avg_1_quant_count': 0, 'avg_3_quant_count': 0,
-            '1_avg_quant': 0, '1_sum_quant': 0, '3_sum_quant': 0, '3_avg_quant': 0, '2_sum_quant': 0
+            'cust': row['cust'], 'prod': row['prod'],
+            'avg_3_quant_count': 0, 'avg_1_quant_count': 0, 'avg_2_quant_count': 0,
+            '3_avg_quant': 0, '1_avg_quant': 0, '2_avg_quant': 0
         }
         
-    #Pass 1: Sigma is (state=="NY")
+    #Pass 1: Sigma is (year == 2018)
     for row in rows:
-        if row["state"]=="NY":
-            key = tuple([row["cust"]])
+        if row["year"]==2018:
+            key = tuple([row["cust"], row["prod"]])
             mf_struct[key]['1_avg_quant'] += row['quant']
             mf_struct[key]['avg_1_quant_count'] += 1
-            mf_struct[key]['1_sum_quant'] += row['quant']
 
-    #Pass 2: Sigma is (state=="NJ")
+    #Pass 2: Sigma is (year == 2019)
     for row in rows:
-        if row["state"]=="NJ":
-            key = tuple([row["cust"]])
-            mf_struct[key]['2_sum_quant'] += row['quant']
+        if row["year"]==2019:
+            key = tuple([row["cust"], row["prod"]])
+            mf_struct[key]['2_avg_quant'] += row['quant']
+            mf_struct[key]['avg_2_quant_count'] += 1
 
-    #Pass 3: Sigma is (state=="CT")
+    #Pass 3: Sigma is (year == 2020)
     for row in rows:
-        if row["state"]=="CT":
-            key = tuple([row["cust"]])
-            mf_struct[key]['3_sum_quant'] += row['quant']
+        if row["year"]==2020:
+            key = tuple([row["cust"], row["prod"]])
             mf_struct[key]['3_avg_quant'] += row['quant']
             mf_struct[key]['avg_3_quant_count'] += 1
 
 #Compute Averages 
 
     for key in mf_struct:
+        if mf_struct[key]['avg_3_quant_count'] > 0:
+            mf_struct[key]['3_avg_quant'] /= mf_struct[key]['avg_3_quant_count']
+
+    for key in mf_struct:
         if mf_struct[key]['avg_1_quant_count'] > 0:
             mf_struct[key]['1_avg_quant'] /= mf_struct[key]['avg_1_quant_count']
 
     for key in mf_struct:
-        if mf_struct[key]['avg_3_quant_count'] > 0:
-            mf_struct[key]['3_avg_quant'] /= mf_struct[key]['avg_3_quant_count']
+        if mf_struct[key]['avg_2_quant_count'] > 0:
+            mf_struct[key]['2_avg_quant'] /= mf_struct[key]['avg_2_quant_count']
 
     #Apply Having Condition and form output table 
     
     _global = []
     for row in mf_struct.values():
-        if row["1_sum_quant"] > 2 * row["2_sum_quant"] or row["1_avg_quant"] > row["3_avg_quant"]:
+        if row["3_avg_quant"] >= row["2_avg_quant"] and row["2_avg_quant"] >= row["1_avg_quant"]:
             output = {}
-            for col in ['cust', '1_sum_quant', '2_sum_quant', '3_sum_quant']:
+            for col in ['cust', 'prod', '1_avg_quant', '2_avg_quant', '3_avg_quant']:
                 if col in row:
                     output[col] = row[col]
                 else:

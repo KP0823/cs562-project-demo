@@ -13,7 +13,7 @@ class mf_Query:
         self.G=None
 
 def readQuery_CommandLine():
-    s= set([item.strip().lower() for item in input("SELECT ATTRIBUTE(S):").split(",")])
+    s= ([item.strip().lower() for item in input("SELECT ATTRIBUTE(S):").split(",")])
     n= int(input("NUMBER OF GROUPING VARIABLES(n):").strip()) # this strip might be unnecessary
     V= set([item.strip().lower() for item in input("GROUPING ATTRIBUTES(V):").split(",")])
     F= set([item.strip().lower() for item in input("F-VECT([F]):").split(",")])
@@ -97,10 +97,10 @@ def main():
         filename = sys.argv[1]
         S, n, V, F, sigma, G = readQuery_File(filename)
         #change S V and F to "sets?"
-        print(f"{F}\n {V}\n {n}\n {S}\n {sigma}\n {G}")
+        print(f"{S}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
     else:
         S, n, V, F, sigma, G = readQuery_CommandLine()
-        print(f"{F}\n {V}\n {n}\n {S}\n {sigma}\n {G}")
+        print(f"{S}\n {n}\n {V}\n {F}\n {sigma}\n {G}")
 
     """
     This is the generator code. It should take in the MF structure and generate the code
